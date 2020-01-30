@@ -2,66 +2,79 @@ import string
 import random
 import math
 import nltk
+from tqdm import tqdm
 
+from data import preprocess, transform
 
 
 class Quipster(object):
 
     def __init__(
         self,
-        puzzle,
-        num_trials,
-        num_swaps,
+        corpus,
+        num_trials=15,
+        num_swaps=10**4,
     ):
 
     # Input parameters
-    self.ciphertext = ciphertext
+    self.corpus = corpus
     self.num_trials = num_trials
     self.num_swaps = num_swaps
 
-    # Create vocabulary
-    self.distinguished_symbols = ["$", "'"]
-    self.d_symbol_end = "'"
-    self.vocabulary = list(string.ascii_lowercase) + self.distinguished_symbols
-    
-    # Initialize parameters
-    self.best_score = -math.inf
-    self.best_trial_score = -math.inf
-    self.best_key = None
-
-
-    def preprocess(self, ciphertext):
-        output = ciphertext.copy()
-        output = output.lower()
-        return output
-
-    def score(self, x):
-        pass
+    self.vocabulary = list(string.ascii_uppercase)
+    self.key = self.vocabulary.copy()
 
     @staticmethod
     def swap(key):
         """ Randomly swap 2 letters of key """
+        i, j = random.sample(range(len(key)), 2)
         new_key = key.copy()
-        i, j = random.sample(range(len(new_key)), 2)
         new_key[i], new_key[j] = new_key[j], new_key[i]
         return new_key
 
+    def score(self, candidate, cipher):
+        """ Compute metric score w.r.t cipher and candidate text """
+        score = nltk.translate.bleu_score.sentence_bleu(
+            cipher,
+            candidate,
+            weights=(0.33, 0.33, 0.33, 0)
+        )
+        return score
 
-    def search(self):
-        pass
+    def fit(self, cipher):
+        """ Main decoding loop """
+        cipher = preprocess(cipher)
+
+        best_score = -math.inf
+        for i in range(self.num_trials):
+            print('Trial {}/{}'.format(i, self.num_trials))
+
+            # Initialize trial key as randomly shuffled vocabulary
+            key = self.vocabulary.copy()
+            random.shuffle(key)
+
+            best_trial_score = -math.inf
+            for j in tqdm(range(self.num_swaps)):
+                # Perform random swap
+                new_key = self.swap(key)
+
+                # Decode cipher using key
+                candidate = transform(new_key, cipher, self.vocabulary)
+
+                # Calculate score
+                score = self.score(candidate, cipher)
+
+                if score > best_trial_score:
+                    key = new_key
+                    best_trial_score = score
+
+            if best_trial_score > best_score:
+                self.key = key.copy()
+                best_score = best_trial_score
 
 
-    def trial(self):
-        """ Run a single trial """
-        pass
-
-
-    def transform(self, key):
-        return self.puzzle.translate(stringmaketrans("".join(key), string.ascii_lowercase))
-        
-
-    def decode(self):
-        """ Main decoding loop ""
-        best_score = 0
-        for
-        pass
+    def decode(self, cipher):
+        """ Transform cipher text given the fitted model """
+        cipher = preprocess(cipher)
+        plaintext = transform(self.key, cipherl self.vocabulary)
+        return plaintext

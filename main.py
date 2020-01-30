@@ -1,30 +1,52 @@
 import os
+import glob
+import random
 import argparse
 from pprint import pprint
 
 from quipster import Quipster
+from data import load_great_expectations, preprocess, transform
 
-def load(file_path):
+
+PLAINTEXT_PATH = "./data/plaintexts/"
+
+
+def load_cipher(file_path):
     with open(file_path, 'r') as f:
-        cipher = 
+        cipher = f.read().strip()
 
     return cipher
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cipher_path", type=str, help="Path to file containing ciphertext")
-    parser.add_argument("--num_trials", type=int, help="Number of trials to execute")
-    parser.add_argument("--num_swaps", type=int, help="Number of swaps to perform per trial")
-    args = parser.parse_args()
+def load_plaintext():
+    plaintexts = glob.glob(PLAINTEXT_PATH + "*.txt")
+    text = random.sample(plaintexts)
+
+    with open(text, 'r') as f:
+        text = f.read().strip()
+
+    text = preprocess(text)
+    return text
+
+def generate_cipher(text):
+    vocabulary = string.ascii_uppercase
+    key = vocabulary.copy()
+    random.shuffle(key)
+
+    cipher = transform()
+
+
+
+def main(args)
     
-    ciphertext = load(args.cipher_path)
+    corpus = load_great_expectations()
 
     cryptanalyzer = Quipster(
-        ciphertext,
+        corpus,
         args.num_trials,
-        args.num_swaps
+        args.num_swaps,
     )
-    plaintext, key = cryptanalyzer.decode()
+    key = cryptanalyzer.fit(cipher)
+    plaintext = cryptanalyzer.decode(ciphertext)
     
     print("\nCiphertext:\n")
     pprint(cipher)
@@ -34,3 +56,13 @@ if __name__ == '__main__':
 
     print('\nKey:\n')
     pprint(key)
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cipher_path", type=str, default=None, help="Path to file containing ciphertext")
+    parser.add_argument("--num_trials", type=int, help="Number of trials to execute")
+    parser.add_argument("--num_swaps", type=int, help="Number of swaps to perform per trial")
+    args = parser.parse_args()
+    main(args)

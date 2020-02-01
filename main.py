@@ -16,13 +16,14 @@ def generate_cipher(text, vocabulary=string.ascii_lowercase):
 
 def main(args):
     
-    if args.cipher_path is not None:
-        cipher = utils.load_file(args.cipher_path)
+    if args.ciphertext_path is not None:
+        cipher = utils.load_file(args.ciphertext_path)
+        plaintext = 'Plaintext not provided'
     elif args.plaintext_path is not None:
         plaintext = utils.load_file(args.plaintext_path)
         cipher = generate_cipher(plaintext)
     else:
-        raise Exception('Must specify either --cipher_path or --plaintext_path')
+        raise Exception('Must specify either --ciphertext_path or --plaintext_path')
 
     # Instantiate and fit the Quipster substitution cipher solver
     cryptanalyzer = Quipster(
@@ -48,8 +49,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cipher_path", type=str, default=None, help="Path to file containing ciphertext")
+    parser.add_argument("--ciphertext_path", type=str, default=None, help="Path to file containing ciphertext")
     parser.add_argument("--plaintext_path", type=str, default=None, help="Path to file containing ciphertext")
+    parser.add_argument("--output", type=str, default='plaintext.txt', )
     parser.add_argument("--num_trials", type=int, default=15, help="Number of trials to execute")
     parser.add_argument("--num_swaps", type=int, default=10**4, help="Number of swaps to perform per trial")
     parser.add_argument("--converge_swaps", type=int, default=2, help="Number of characters swapped in key each iteration when convergence has occurred")

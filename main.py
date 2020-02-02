@@ -1,5 +1,3 @@
-import random
-import string
 import argparse
 from pprint import pprint
 
@@ -7,21 +5,16 @@ import utils
 from quipster import Quipster
 
 
-def generate_cipher(text, vocabulary=string.ascii_lowercase):
-    key = list(vocabulary).copy()
-    random.shuffle(key)
-    text = text.lower()
-    cipher = utils.transform(text, key, vocabulary)
-    return cipher
-
 def main(args):
     
     if args.ciphertext_path is not None:
         cipher = utils.load_file(args.ciphertext_path)
         plaintext = 'Plaintext not provided'
+
     elif args.plaintext_path is not None:
         plaintext = utils.load_file(args.plaintext_path)
-        cipher = generate_cipher(plaintext)
+        cipher = utils.generate_cipher(plaintext)
+        
     else:
         raise Exception('Must specify either --ciphertext_path or --plaintext_path')
 
@@ -36,22 +29,26 @@ def main(args):
 
     print("\nPlaintext:\n")
     pprint(plaintext)
+    
+    utils.print_stdout(cipher, decrypted, key, cryptanalyzer.vocabulary)
 
-    print("\nCiphertext:\n")
-    pprint(cipher)
+    help_the_algorithm = input('\nWould you like to manually help the algorithm? (y/n) ').lower()
 
-    print("\nDecrypted:\n")
-    pprint(decrypted)
-
-    print('\nKey:\n')
-    pprint(key)
-
+    if help_the_algorithm == 'y':
+        cryptanalyzer = utils.user_interaction(cryptanalyzer, cipher)
+    
+    decrypted = cryptanalyzer.decode(cipher)
+    utils.print_stdout(cipher, decrypted, cryptanalyzer.key, cryptanalyzer.vocabulary)
+    
+    print("Saving plaintext to {}".format(args.output))
+    with open(args.output, 'w') as f:
+        f.write(decrypted)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--ciphertext_path", type=str, default=None, help="Path to file containing ciphertext")
     parser.add_argument("--plaintext_path", type=str, default=None, help="Path to file containing ciphertext")
-    parser.add_argument("--output", type=str, default='plaintext.txt', )
+    parser.add_argument("--output", type=str, default='plaintext.txt', help="Path to output plaintext file")
     parser.add_argument("--num_trials", type=int, default=15, help="Number of trials to execute")
     parser.add_argument("--num_swaps", type=int, default=10**4, help="Number of swaps to perform per trial")
     parser.add_argument("--converge_swaps", type=int, default=2, help="Number of characters swapped in key each iteration when convergence has occurred")

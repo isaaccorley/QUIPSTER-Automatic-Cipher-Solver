@@ -33,7 +33,7 @@ class Quipster(object):
         """ Load frequencies of common words and bigrams from Moby Dick """
         with open(path, 'r') as f:
             corpus = json.load(f)
-
+        
         return corpus
 
     def score(self, candidate):
@@ -43,9 +43,7 @@ class Quipster(object):
         """
         score = 0
         for k in self.corpus:
-            #noise = random.sample([-1000, 1000], 1)[0]
-            noise = 0
-            score += candidate.count(k) * self.corpus[k] + noise
+            score += candidate.count(k) * self.corpus[k]
 
         return score
 
@@ -60,12 +58,11 @@ class Quipster(object):
             print('Trial {}/{}'.format(i, self.num_trials))
 
             # Initialize trial key as randomly shuffled vocabulary
-            if convergence_count < 3:
+            if convergence_count < 10:
                 key = self.vocabulary.copy()
                 random.shuffle(key)
             else:
-                key = self.key.copy()
-                key = utils.swap(key, n=self.converge_swaps*3)
+                key = utils.swap(self.key, n=self.converge_swaps*2)
 
             trial_convergence_count = 0
             best_trial_score = -math.inf
@@ -97,12 +94,13 @@ class Quipster(object):
             else:
                 convergence_count += 1
 
-            print('Best Score {}'.format(best_score))
+            print('\nBest Score {}'.format(best_score))
             plaintext = self.decode(ciphertext)
             print('Current Decryption \n {}'.format(plaintext))
 
-        return {k: v for k, v in zip(self.vocabulary, self.key)}
+        return key
 
+        
     def decode(self, cipher):
         """ Transform cipher text given the fitted model """
         cipher = cipher.lower()
